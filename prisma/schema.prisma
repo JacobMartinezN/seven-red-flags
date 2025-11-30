@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AgeRange {
+  VALUE_25_30
+  VALUE_18_24
+  VALUE_31_40
+  VALUE_40_PLUS
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum MetThrough {
+  TINDER
+  BUMBLE
+  INSTAGRAM
+  TIKTOK
+  TRABAJO
+  FIESTA
+  OTRO
+}
+
+enum RelationshipType {
+  SALIENTE
+  RELACION_FORMAL
+  AVENTURA
+  MATCH_APP
+  AMIGOS_CON_DERECHO
+  OTRO
+}
+
+enum ExperienceType {
+  POSITIVO
+  INFIDELIDAD
+  GHOSTING
+  TOXICO
+  VIOLENCIA_EMOCIONAL
+  OTRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+}
+
+enum PaymentProvider {
+  MERCADO_PAGO
+  CULQI
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  createdAt    DateTime        @default(now())
+
+  profiles     Profile[]       @relation("UserProfiles")
+  reports      Report[]        @relation("UserReports")
+  subscriptions Subscription[]
+}
+
+model Profile {
+  id         String      @id @default(cuid())
+  initials   String
+  ageRange   AgeRange
+  city       String
+  district   String
+  gender     Gender
+  occupation String?
+  metThrough MetThrough
+  createdAt  DateTime    @default(now())
+
+  createdBy  String
+  creator    User        @relation("UserProfiles", fields: [createdBy], references: [id])
+
+  reports    Report[]
+}
+
+model Report {
+  id               String           @id @default(cuid())
+  profileId        String
+  authorId         String
+
+  profile          Profile          @relation(fields: [profileId], references: [id])
+  author           User             @relation("UserReports", fields: [authorId], references: [id])
+
+  relationshipType RelationshipType
+  experienceType   ExperienceType
+
+  summary          String
+  durationMonths   Int?
+  year             Int?
+  isFlagged        Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id])
+
+  status          SubscriptionStatus
+  plan            SubscriptionPlan   @default(PRO)
+  startedAt       DateTime           @default(now())
+  expiresAt       DateTime
+
+  provider        PaymentProvider
+  providerRef     String
+}
